@@ -1,0 +1,54 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'aws-sdk'
+require 'sitemap_generator'
+require 'pry'
+
+# Connect to AWS
+AWS.config(
+  :access_key_id => ENV['AWS_ACCESS_KEY'],
+  :secret_access_key => ENV['AWS_SECRET_KEY'])
+
+s3 = AWS::S3.new
+bucket = s3.buckets[ENV['STOCK_JSON_BUCKET']]
+
+# Get the sitemap json from S3
+File.unlink('/tmp/stocks.json') if File.exists?('/tmp/stocks.json')
+
+obj = bucket.objects[ENV['STOCK_JSON_FILE']]
+
+File.open('/tmp/stocks.json', 'wb') do |file|
+  obj.read do |chunk|
+     file.write(chunk)
+  end
+end
+
+# Read the YML
+json = File.read('/tmp/stocks.json')
+stocks = JSON.parse(json)
+
+# Set up sitemap generator
+SitemapGenerator::Sitemap.search_engines = {} if !ENV['PING_ENGINES']
+SitemapGenerator::Sitemap.default_host = ENV['SITE_ROOT_URL']
+compress = ENV['COMPRESS_SITEMAP'] ? true : false
+
+# Generate sitemap
+
+SitemapGenerator::Utilities.clean_files
+SitemapGenerator::Sitemap.create(compress: compress) do
+  add '/'
+  stocks['rics'].each do |ric|
+    add "/stocks/#{ric}", changefreq: 'daily', lastmod: Time.now.utc
+  end
+end
+SitemapGenerator::Sitemap.ping_search_engines
+
+# Upload sitemap
+bucket = s3.buckets[ENV['SITEMAP_DESTINATION_BUCKET']]
+Dir.foreach("/project/public") do |file|
+  binding.pry
+  if !File.directory?("/project/public/#{file}")
+    obj = bucket.objects[file]
+    obj.write(File.open("/project/public/#{file}", 'rb'))
+  end
+end

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+cd /vagrant
+
+# Build main web project
+docker build --tag=web .
