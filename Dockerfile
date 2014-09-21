@@ -45,4 +45,4 @@ VOLUME ["/project"]
 
 # Setup the entrypoint
 ENTRYPOINT ["/bin/bash", "-l", "-c"]
-CMD ["/bin/bash"]
+CMD ["./sitemapper"]

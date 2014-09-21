@@ -24,4 +24,4 @@ If you dont want the search engines pinged then dont pass the environment variab
 
 The same applies for compression
 
-Passing false to those variable will not trun off the compression or pinging, you must not pass them at all
+Passing false to those variables will not trun off the compression or pinging, you must not pass them at all.

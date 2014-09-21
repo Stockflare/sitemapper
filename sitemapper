@@ -2,7 +2,7 @@
 require 'rubygems'
 require 'aws-sdk'
 require 'sitemap_generator'
-require 'pry'
+# require 'pry'
 
 # Connect to AWS
 AWS.config(
@@ -46,8 +46,7 @@ SitemapGenerator::Sitemap.ping_search_engines
 # Upload sitemap
 bucket = s3.buckets[ENV['SITEMAP_DESTINATION_BUCKET']]
 Dir.foreach("/project/public") do |file|
-  binding.pry
-  if !File.directory?("/project/public/#{file}")
+  if !File.directory?("/project/public/#{file}") && file != '.gitkeep'
     obj = bucket.objects[file]
     obj.write(File.open("/project/public/#{file}", 'rb'))
   end
