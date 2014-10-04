@@ -2,6 +2,9 @@
 require 'rubygems'
 require 'aws-sdk'
 require 'sitemap_generator'
+require 'elasticsearch'
+require 'json'
+
 # require 'pry'
 
 # Connect to AWS
@@ -10,44 +13,61 @@ AWS.config(
   :secret_access_key => ENV['AWS_SECRET_KEY'])
 
 s3 = AWS::S3.new
-bucket = s3.buckets[ENV['STOCK_JSON_BUCKET']]
 
-# Get the sitemap json from S3
-File.unlink('/tmp/stocks.json') if File.exists?('/tmp/stocks.json')
+# Set RICs from elastic search
+es_client = Elasticsearch::Client.new log: true, host: "#{ENV['ELASTICSEARCH_PORT_9200_TCP_ADDR']}:#{ENV['ELASTICSEARCH_PORT_9200_TCP_PORT']}"
+search_body = {
+                "query" => {
+                  "bool" => {
+                    "must" => [
+                      {
+                        "match_all" => {}
+                      }
+                    ],
+                    "must_not" => [],
+                    "should" => []
+                  }
+                },
+                "from" => 0,
+                "sort" => [],
+                "facets" => {},
+                "fields" => [
+                  "ric",
+                  "rating"
+                ]
+              }
 
-obj = bucket.objects[ENV['STOCK_JSON_FILE']]
 
-File.open('/tmp/stocks.json', 'wb') do |file|
-  obj.read do |chunk|
-     file.write(chunk)
-  end
-end
+results = es_client.search index: ENV['ODIN_INDEX_NAME'], size: 99000 , body: search_body.to_json
 
-# Read the YML
-json = File.read('/tmp/stocks.json')
-stocks = JSON.parse(json)
+# Process Rics and generate sitemap
+if results['hits']
+  if results['hits']['hits']
+    if results['hits']['hits'].count > 0
+      # Set up sitemap generator
+      SitemapGenerator::Sitemap.search_engines = {} if !ENV['PING_ENGINES']
+      SitemapGenerator::Sitemap.default_host = ENV['SITE_ROOT_URL']
+      compress = ENV['COMPRESS_SITEMAP'] ? true : false
 
-# Set up sitemap generator
-SitemapGenerator::Sitemap.search_engines = {} if !ENV['PING_ENGINES']
-SitemapGenerator::Sitemap.default_host = ENV['SITE_ROOT_URL']
-compress = ENV['COMPRESS_SITEMAP'] ? true : false
+      # Generate sitemap
 
-# Generate sitemap
+      SitemapGenerator::Utilities.clean_files
+      SitemapGenerator::Sitemap.create(compress: compress) do
+        add '/'
+        results['hits']['hits'].each do |hit|
+          add "/stocks/#{hit['fields']['ric'][0]}", changefreq: 'daily', lastmod: Time.now.utc
+        end
+      end
+      SitemapGenerator::Sitemap.ping_search_engines
 
-SitemapGenerator::Utilities.clean_files
-SitemapGenerator::Sitemap.create(compress: compress) do
-  add '/'
-  stocks['rics'].each do |ric|
-    add "/stocks/#{ric}", changefreq: 'daily', lastmod: Time.now.utc
-  end
-end
-SitemapGenerator::Sitemap.ping_search_engines
-
-# Upload sitemap
-bucket = s3.buckets[ENV['SITEMAP_DESTINATION_BUCKET']]
-Dir.foreach("/project/public") do |file|
-  if !File.directory?("/project/public/#{file}") && file != '.gitkeep'
-    obj = bucket.objects[file]
-    obj.write(File.open("/project/public/#{file}", 'rb'))
+      # Upload sitemap
+      bucket = s3.buckets[ENV['SITEMAP_DESTINATION_BUCKET']]
+      Dir.foreach("/project/public") do |file|
+        if !File.directory?("/project/public/#{file}") && file != '.gitkeep'
+          obj = bucket.objects[file]
+          obj.write(File.open("/project/public/#{file}", 'rb'))
+        end
+      end
+    end
   end
 end

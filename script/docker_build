@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 cd /vagrant
 
+# Build Elasticsearch
+docker build --tag=elasticsearch docker/elasticsearch
+
 # Build main web project
 docker build --tag=web .

@@ -1,0 +1,15 @@
+#!/bin/bash
+cd /vagrant
+echo Starting required service containers
+
+# Stop and remove all containers
+script/docker_clean
+
+# login to docker index
+script/docker_login
+
+# Start elasticsearch
+docker run --name=elasticsearch --detach=true --publish=9200:9200 --publish=9300:9300 elasticsearch
+read -t5 -n1 -r -p "Waiting for elasticsearch to start..." key
+
+echo "All services started"

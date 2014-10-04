@@ -17,7 +17,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine.
-  [3000, 5000].each do |p|
+  [3000, 5000, 9200].each do |p|
     config.vm.network :forwarded_port, guest: p, host: p
   end
 
@@ -43,8 +43,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Build docker containers
   config.vm.provision :shell, path: "script/docker_build", :privileged => true
 
-  # # Start containers
-  # config.vm.provision :shell, path: "script/vagrant/docker_start", :privileged => true
+  # Start containers
+  config.vm.provision :shell, path: "script/docker_run", :privileged => true
 
   # # Seed the App
   # config.vm.provision :shell, path: "script/vagrant/app", :privileged => true

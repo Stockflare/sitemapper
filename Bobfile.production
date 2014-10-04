@@ -1,0 +1,12 @@
+version = 1
+
+[[container]]
+name = "sitemapper"
+Dockerfile = "Dockerfile"
+registry = "registry.stockflare.com:5000/stockflare"
+project = "sitemapper"
+tags = [
+  "latest",
+  "git:branch",
+  "git:rev"
+]

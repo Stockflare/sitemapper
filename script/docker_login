@@ -1,0 +1,3 @@
+#!/bin/bash
+# login to docker index
+docker login --username=stratmm --password=hqBqjTbXw6saModDb8sUT0Ky --email=mark@stratmann.me.uk
