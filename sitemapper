@@ -55,7 +55,7 @@ if results['hits']
       SitemapGenerator::Sitemap.create(compress: compress) do
         add '/'
         results['hits']['hits'].each do |hit|
-          add "/stocks/#{hit['fields']['ric'][0]}", changefreq: 'daily', lastmod: Time.now.utc
+          add "#/stocks/#{hit['fields']['ric'][0]}", changefreq: 'daily', lastmod: Time.now.utc
         end
       end
       SitemapGenerator::Sitemap.ping_search_engines
