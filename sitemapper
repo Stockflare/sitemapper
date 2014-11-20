@@ -56,6 +56,17 @@ if results['hits']
         add '/'
         results['hits']['hits'].each do |hit|
           add "#!/stocks/#{hit['fields']['ric'][0]}", changefreq: 'daily', lastmod: Time.now.utc
+          add "#!/stocks/#{hit['fields']['ric'][0]}/breakdown/upside", changefreq: 'daily', lastmod: Time.now.utc
+          add "#!/stocks/#{hit['fields']['ric'][0]}/breakdown/growth", changefreq: 'daily', lastmod: Time.now.utc
+          add "#!/stocks/#{hit['fields']['ric'][0]}/breakdown/wallStreet", changefreq: 'daily', lastmod: Time.now.utc
+          add "#!/stocks/#{hit['fields']['ric'][0]}/breakdown/profitable", changefreq: 'daily', lastmod: Time.now.utc
+          add "#!/stocks/#{hit['fields']['ric'][0]}/breakdown/dividends", changefreq: 'daily', lastmod: Time.now.utc
+          add "#!/stocks/#{hit['fields']['ric'][0]}/breakdown/peers", changefreq: 'daily', lastmod: Time.now.utc
+          add "#!/stocks/#{hit['fields']['ric'][0]}/breakdown/description", changefreq: 'daily', lastmod: Time.now.utc
+          add "#!/stocks/#{hit['fields']['ric'][0]}/breakdown/stats", changefreq: 'daily', lastmod: Time.now.utc
+          add "#!/stocks/#{hit['fields']['ric'][0]}/breakdown/latest", changefreq: 'daily', lastmod: Time.now.utc
+          add "#!/stocks/#{hit['fields']['ric'][0]}/breakdown/worth", changefreq: 'daily', lastmod: Time.now.utc
+          
         end
       end
       SitemapGenerator::Sitemap.ping_search_engines
